@@ -6,9 +6,10 @@ Previously three years in security operations at Piper Sandler. BS in Computer S
 
 **What I work with**
 - SIEM: Rapid7 InsightIDR, Devo
-- Endpoint: Microsoft Defender for Endpoint, CrowdStrike Falcon
+- Endpoint: Microsoft Defender for Endpoint (CrowdStrike Falcon previously), CrowdStrike Falcon
 - Email security: Proofpoint
 - Identity: Entra ID, Active Directory
+- Privileged access: Delinea (CyberArk previously)
 
 **Languages:** Python, PowerShell, KQL, SQL
 
