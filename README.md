@@ -5,9 +5,9 @@ Cybersecurity Analyst at Graco, working in detection and response: SIEM alert tr
 Previously three years in security operations at Piper Sandler. BS in Computer Science and MS in Cybersecurity from Concordia University, St. Paul. SSCP.
 
 **What I work with**
-- SIEM: Rapid7 InsightIDR, Devo
-- Endpoint: Microsoft Defender for Endpoint (CrowdStrike Falcon previously), CrowdStrike Falcon
-- Email security: Proofpoint
+- SIEM: Rapid7 InsightIDR (Devo previously), Wazuh at home
+- Endpoint: Microsoft Defender for Endpoint (CrowdStrike Falcon previously)
+- Email security: KnowBe4 (Proofpoint previously)
 - Identity: Entra ID, Active Directory
 - Privileged access: Delinea (CyberArk previously)
 
