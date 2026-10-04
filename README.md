@@ -12,7 +12,7 @@ Previously three years in security operations at Piper Sandler. BS in Computer S
 
 **Languages:** Python, PowerShell, KQL, SQL
 
-**Homelab:** Wazuh SIEM and a small detection lab for testing rules and playbooks outside of work.
+**Homelab:** [homelab-docker](https://github.com/benschugel/homelab-docker): Wazuh SIEM, Frigate NVR, Paperless-ngx, and a Wazuh MCP server for Claude Code, run as Docker Compose stacks for testing rules and playbooks outside of work.
 
 **Interests:** detection engineering, AI for security operations, home automation.
 
