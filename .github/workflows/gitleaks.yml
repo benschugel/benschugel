@@ -1,0 +1,89 @@
+name: gitleaks
+
+# Secret scan on every push and pull request. Fails on any finding.
+# Uses the gitleaks default rules (no .gitleaks.toml).
+#   tree:    everything in the checked-out commit
+#   commits: only the commits this push or PR adds
+# Run it by hand (Actions > gitleaks > Run workflow) with full_history to scan
+# every commit in the repository.
+# Reports are uploaded with secrets redacted.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      full_history:
+        description: "Scan every commit in history, not just the tree"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-24.04
+    env:
+      GITLEAKS_VERSION: "8.30.1"
+      GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Install gitleaks (version and checksum pinned)
+        run: |
+          f="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${f}"
+          echo "${GITLEAKS_SHA256}  ${f}" | sha256sum -c -
+          tar -xzf "$f" gitleaks
+          ./gitleaks version
+
+      - name: Scan the tree
+        id: tree
+        run: |
+          ./gitleaks dir . --redact --no-banner \
+            --report-format json --report-path gitleaks-tree.json --exit-code 1
+
+      - name: Scan new commits
+        id: commits
+        if: ${{ !cancelled() }}
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          FULL: ${{ inputs.full_history }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            range="${PR_BASE}..${PR_HEAD}"
+          elif [ "$EVENT" = "workflow_dispatch" ] && [ "$FULL" = "true" ]; then
+            range="--all"
+          elif [ "$EVENT" = "push" ] && [ -n "$PUSH_BEFORE" ] && [ "$PUSH_BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            range="${PUSH_BEFORE}..${GITHUB_SHA}"
+          else
+            # new branch or manual run: commits not on main yet
+            range="origin/main..${GITHUB_SHA}"
+          fi
+          echo "scanning commits: $range"
+          ./gitleaks git . --redact --no-banner \
+            --log-opts="$range" \
+            --report-format json --report-path gitleaks-commits.json --exit-code 1
+
+      - name: Summary (secrets redacted)
+        if: ${{ !cancelled() }}
+        run: |
+          for r in gitleaks-tree.json gitleaks-commits.json; do
+            [ -f "$r" ] || continue
+            echo "### $r: $(jq length "$r") finding(s)" >> "$GITHUB_STEP_SUMMARY"
+            jq -r '.[] | "- \(.RuleID) \(.File):\(.StartLine) \(.Commit[0:7])"' "$r" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Upload redacted reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: gitleaks-reports
+          path: gitleaks-*.json
+          retention-days: 14
